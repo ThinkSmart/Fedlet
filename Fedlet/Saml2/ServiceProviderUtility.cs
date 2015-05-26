@@ -1333,17 +1333,17 @@ namespace Sun.Identity.Saml2
 
 		#region Static Private Methods
 
-		/// <summary>
-		/// Checks the time condition of the given AuthnResponse.
-		/// </summary>
-		/// <param name="authnResponse">SAMLv2 AuthnResponse.</param>
-		private static void CheckConditionWithTime(AuthnResponse authnResponse)
+        /// <summary>
+        /// Checks the time condition of the given AuthnResponse.
+        /// </summary>
+        /// <param name="authnResponse">SAMLv2 AuthnResponse.</param>
+        /// <param name="assertionTimeSkew">Allowed skew for NotBefore and NotOnOrAfter</param>
+        private static void CheckConditionWithTime(AuthnResponse authnResponse, TimeSpan assertionTimeSkew)
 		{
 			DateTime utcNow = DateTime.UtcNow;
 			DateTime utcBefore = TimeZoneInfo.ConvertTimeToUtc(authnResponse.ConditionNotBefore);
 			DateTime utcOnOrAfter = TimeZoneInfo.ConvertTimeToUtc(authnResponse.ConditionNotOnOrAfter);
-
-			if (utcNow < utcBefore || utcNow >= utcOnOrAfter)
+			if (utcNow < (utcBefore - assertionTimeSkew) || utcNow >= (utcOnOrAfter + assertionTimeSkew))
 			{
 				throw new Saml2Exception(Resources.AuthnResponseInvalidConditionTime);
 			}
@@ -1735,7 +1735,7 @@ namespace Sun.Identity.Saml2
 
 			CheckIssuer(authnResponse.Issuer);
 			CheckStatusCode(authnResponse.StatusCode);
-			CheckConditionWithTime(authnResponse);
+            CheckConditionWithTime(authnResponse, ServiceProvider.AssertionTimeSkew);
 			CheckConditionWithAudience(authnResponse);
 			CheckCircleOfTrust(authnResponse.Issuer);
 		}

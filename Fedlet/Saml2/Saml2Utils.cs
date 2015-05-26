@@ -52,7 +52,10 @@ namespace Sun.Identity.Saml2
 	{
 	    private readonly IFedletCertificateFactory _certificateFactory;
 
-	    public Saml2Utils(IFedletCertificateFactory certificateFactory)
+	    /// <summary>
+	    /// Ctr.
+	    /// </summary>
+        public Saml2Utils(IFedletCertificateFactory certificateFactory)
         {
             _certificateFactory = certificateFactory;
         }
@@ -417,15 +420,16 @@ namespace Sun.Identity.Saml2
 			nsMgr.AddNamespace("saml", Saml2Constants.NamespaceSamlAssertion);
 			nsMgr.AddNamespace("samlp", Saml2Constants.NamespaceSamlProtocol);
 
-			XmlNode issuerNode = xml.DocumentElement.SelectSingleNode("saml:Issuer", nsMgr);
+		    var root = RequireRootElement(xml);
+            XmlNode issuerNode = root.SelectSingleNode("saml:Issuer", nsMgr);
 			if (issuerNode != null)
 			{
-				xml.DocumentElement.InsertAfter(xmlSignature, issuerNode);
+				root.InsertAfter(xmlSignature, issuerNode);
 			}
 			else
 			{
 				// Insert as a child to the target reference id
-				XmlNode targetNode = xml.DocumentElement.SelectSingleNode("//*[@ID='" + targetReferenceId + "']", nsMgr);
+                XmlNode targetNode = root.SelectSingleNode("//*[@ID='" + targetReferenceId + "']", nsMgr);
 				targetNode.PrependChild(xmlSignature);
 			}
 		}
@@ -451,14 +455,14 @@ namespace Sun.Identity.Saml2
 				return;
 			}
 
-			try
-			{
-				var relayStateUrl = new Uri(relayState);
-			}
-			catch (UriFormatException)
-			{
-				throw new Saml2Exception(Resources.MalformedRelayState);
-			}
+            //try
+            //{
+            //    var relayStateUrl = new Uri(relayState);
+            //}
+            //catch (UriFormatException)
+            //{
+            //    throw new Saml2Exception(Resources.MalformedRelayState);
+            //}
 
 			bool valid = false;
 			foreach (string pattern in allowedRelayStates)
@@ -617,5 +621,89 @@ namespace Sun.Identity.Saml2
 	    {
 	        return new Saml2Utils(new FedletCertificateFactory());
 	    }
+
+        /// <summary>
+        /// Xml utility.
+        /// </summary>
+        public static string RequireAttributeValue(XmlDocument document, XmlNamespaceManager nsmgr, string xpath, string attribute)
+        {
+            var root = RequireRootElement(document);
+            var node = root.SelectSingleNode(xpath, nsmgr);
+            if (node != null && node.Attributes != null)
+            {
+                var att = node.Attributes[attribute];
+                if (att != null && !string.IsNullOrEmpty(att.Value))
+                {
+                    return att.Value.Trim();
+                }
+            }
+            throw new Saml2Exception(string.Format("Could not resolve attribute {0} at {1}", xpath, attribute));
+        }
+
+        /// <summary>
+        /// Xml utility.
+        /// </summary>
+        public static string TryGetAttributeValue(XmlDocument document, XmlNamespaceManager nsmgr, string xpath, string attribute)
+        {
+            var root = RequireRootElement(document);
+            var node = root.SelectSingleNode(xpath, nsmgr);
+            if (node == null || node.Attributes == null)
+            {
+                return null;
+            }
+
+            var att = node.Attributes[attribute];
+            if (att == null || string.IsNullOrEmpty(att.Value))
+            {
+                return null;
+            }
+
+            return att.Value.Trim();
+        }
+
+        /// <summary>
+        /// Xml utility.
+        /// </summary>
+        public static string TryGetNodeText(XmlDocument document, XmlNamespaceManager nsmgr, string xpath)
+        {
+            var root = RequireRootElement(document);
+            var node = root.SelectSingleNode(xpath, nsmgr);
+            if (node == null || string.IsNullOrEmpty(node.InnerText))
+            {
+                return null;
+            }
+            return node.InnerText.Trim();
+        }
+
+        /// <summary>
+        /// Xml utility.
+        /// </summary>
+        public static string RequireNodeText(XmlDocument document, XmlNamespaceManager nsmgr, string xpath)
+        {
+            var root = RequireRootElement(document);
+            var node = root.SelectSingleNode(xpath, nsmgr);
+            if (node != null)
+            {
+                var text = node.InnerText;
+                if (!string.IsNullOrEmpty(text))
+                {
+                    return text.Trim();
+                }
+            }
+            throw new Saml2Exception("Could not resolve node text at " + xpath);
+        }
+
+        /// <summary>
+        /// Xml utility.
+        /// </summary>
+        public static XmlNode RequireRootElement(XmlDocument xmlDocument)
+        {
+            var root = xmlDocument.DocumentElement;
+            if (root == null)
+            {
+                throw new Saml2Exception("Could not resolve root element");
+            }
+            return root;
+        }
 	}
 }

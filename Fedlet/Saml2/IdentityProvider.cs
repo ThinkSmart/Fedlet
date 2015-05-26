@@ -25,7 +25,6 @@
  * $Id: IdentityProvider.cs,v 1.6 2010/01/19 18:23:09 ggennaro Exp $
  */
 
-using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml;
@@ -41,7 +40,7 @@ namespace Sun.Identity.Saml2
 	{
 	    #region Members
 
-	    private Saml2Utils _saml2Utils;
+	    private readonly Saml2Utils _saml2Utils;
 
 		/// <summary>
 		/// XML document representing the extended metadata for this Identity 
@@ -67,7 +66,7 @@ namespace Sun.Identity.Saml2
 		/// <summary>
 		/// Identity Provider's X509 certificate.
 		/// </summary>
-		private readonly X509Certificate2 signingCertificate;
+		private readonly X509Certificate2 _signingCertificate;
 
 		#endregion
 
@@ -93,7 +92,7 @@ namespace Sun.Identity.Saml2
 				// Load now since a) it doesn't change and b) its a 
 				// performance dog on Win 2003 64-bit.
 				byte[] byteArray = Encoding.UTF8.GetBytes(EncodedSigningCertificate);
-				signingCertificate = new X509Certificate2(byteArray);
+				_signingCertificate = new X509Certificate2(byteArray);
 			}
 			catch (XmlException xe)
 			{
@@ -112,14 +111,12 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/md:EntityDescriptor";
-				XmlNode root = _metadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _metadataNsMgr);
-				return node.Attributes["entityID"].Value.Trim();
+				const string xpath = "/md:EntityDescriptor";
+                return Saml2Utils.RequireAttributeValue(_metadata, _metadataNsMgr, xpath, "entityID").Trim();
 			}
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the encoded X509 certifcate located within the identity
 		/// provider's metadata.
 		/// </summary>
@@ -127,12 +124,8 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath =
-					"/md:EntityDescriptor/md:IDPSSODescriptor/md:KeyDescriptor[@use='signing']/ds:KeyInfo/ds:X509Data/ds:X509Certificate";
-				XmlNode root = _metadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _metadataNsMgr);
-				string value = node.InnerText.Trim(); // Regex.Replace(node.InnerText.Trim(), @"[\r\t]", "");
-				return value;
+				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor/md:KeyDescriptor[@use='signing']/ds:KeyInfo/ds:X509Data/ds:X509Certificate";
+                return Saml2Utils.RequireNodeText(_metadata, _metadataNsMgr, xpath).Trim();
 			}
 		}
 
@@ -141,7 +134,7 @@ namespace Sun.Identity.Saml2
 		/// </summary>
 		public X509Certificate2 SigningCertificate
 		{
-			get { return signingCertificate; }
+			get { return _signingCertificate; }
 		}
 
 		/// <summary>
@@ -152,9 +145,9 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleLogoutService";
-				XmlNode root = _metadata.DocumentElement;
-				XmlNodeList nodeList = root.SelectNodes(xpath, _metadataNsMgr);
+				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleLogoutService";
+                var root = Saml2Utils.RequireRootElement(_metadata);
+				var nodeList = root.SelectNodes(xpath, _metadataNsMgr);
 
 				return nodeList;
 			}
@@ -168,37 +161,30 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleSignOnService";
-				XmlNode root = _metadata.DocumentElement;
-				XmlNodeList nodeList = root.SelectNodes(xpath, _metadataNsMgr);
+				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleSignOnService";
+                var root = Saml2Utils.RequireRootElement(_metadata);
+				var nodeList = root.SelectNodes(xpath, _metadataNsMgr);
 
 				return nodeList;
 			}
 		}
 
-		/// <summary>
-		/// Gets a value indicating whether the extended metadata for
-		/// WantArtifactResolveSigned is true or false.
-		/// </summary>
-		public bool WantArtifactResolveSigned
-		{
-			get
-			{
-				string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantArtifactResolveSigned']/mdx:Value";
-				XmlNode root = _extendedMetadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _extendedMetadataNsMgr);
+	    /// <summary>
+	    /// Gets a value indicating whether the extended metadata for
+	    /// WantArtifactResolveSigned is true or false.
+	    /// </summary>
+	    public bool WantArtifactResolveSigned
+	    {
+	        get
+	        {
+	            const string xpath =
+	                "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantArtifactResolveSigned']/mdx:Value";
+                var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
+	            return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
+	        }
+	    }
 
-				if (node != null)
-				{
-					string value = node.InnerText.Trim();
-					return _saml2Utils.GetBoolean(value);
-				}
-
-				return false;
-			}
-		}
-
-		/// <summary>
+	    /// <summary>
 		/// Gets a value indicating whether the metadata value for 
 		/// WantAuthnRequestsSigned is true or false.
 		/// </summary>
@@ -206,17 +192,9 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor";
-				XmlNode root = _metadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _metadataNsMgr);
-
-				if (node != null)
-				{
-					string value = node.Attributes["WantAuthnRequestsSigned"].Value;
-					return _saml2Utils.GetBoolean(value);
-				}
-
-				return false;
+				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor";
+                var value = Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "WantAuthnRequestsSigned");
+			    return !string.IsNullOrEmpty(value) && _saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -229,17 +207,9 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutRequestSigned']/mdx:Value";
-				XmlNode root = _extendedMetadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _extendedMetadataNsMgr);
-
-				if (node != null)
-				{
-					string value = node.InnerText.Trim();
-					return _saml2Utils.GetBoolean(value);
-				}
-
-				return false;
+				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutRequestSigned']/mdx:Value";
+                var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
+                return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
 			}
 		}
 
@@ -251,18 +221,10 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutResponseSigned']/mdx:Value";
-				XmlNode root = _extendedMetadata.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, _extendedMetadataNsMgr);
-
-				if (node != null)
-				{
-					string value = node.InnerText.Trim();
-					return _saml2Utils.GetBoolean(value);
-				}
-
-				return false;
-			}
+				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutResponseSigned']/mdx:Value";
+                var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
+                return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
+            }
 		}
 
 		#endregion
@@ -282,14 +244,7 @@ namespace Sun.Identity.Saml2
 			xpath.Append(binding);
 			xpath.Append("']");
 
-			XmlNode root = _metadata.DocumentElement;
-			XmlNode node = root.SelectSingleNode(xpath.ToString(), _metadataNsMgr);
-			if (node != null)
-			{
-				return node.Attributes["Location"].Value.Trim();
-			}
-
-			return null;
+            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "Location");
 		}
 
 		/// <summary>
@@ -310,14 +265,7 @@ namespace Sun.Identity.Saml2
 			xpath.Append(binding);
 			xpath.Append("']");
 
-			XmlNode root = _metadata.DocumentElement;
-			XmlNode node = root.SelectSingleNode(xpath.ToString(), _metadataNsMgr);
-			if (node != null)
-			{
-				return node.Attributes["Location"].Value.Trim();
-			}
-
-			return null;
+            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "Location");
 		}
 
 		/// <summary>
@@ -339,14 +287,7 @@ namespace Sun.Identity.Saml2
 			xpath.Append(binding);
 			xpath.Append("']");
 
-			XmlNode root = _metadata.DocumentElement;
-			XmlNode node = root.SelectSingleNode(xpath.ToString(), _metadataNsMgr);
-			if (node != null)
-			{
-				return node.Attributes["ResponseLocation"].Value.Trim();
-			}
-
-			return null;
+            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "ResponseLocation");
 		}
 
 		/// <summary>
@@ -362,16 +303,9 @@ namespace Sun.Identity.Saml2
 			xpath.Append(binding);
 			xpath.Append("']");
 
-			XmlNode root = _metadata.DocumentElement;
-			XmlNode node = root.SelectSingleNode(xpath.ToString(), _metadataNsMgr);
-			if (node != null)
-			{
-				return node.Attributes["Location"].Value.Trim();
-			}
-
-			return null;
-		}
+            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "Location");
+        }
 
 		#endregion
-	}
+    }
 }

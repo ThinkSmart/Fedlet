@@ -269,7 +269,7 @@ namespace Sun.Identity.Saml2
 				string xpath = "/samlp:Response/saml:Assertion/saml:Subject/saml:NameID";
 				XmlNode root = xml.DocumentElement;
 				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.InnerText.Trim();
+				return node == null ? null : node.InnerText.Trim();
 			}
 		}
 
