@@ -182,7 +182,7 @@ namespace Sun.Identity.Saml2
 		/// <returns>
 		/// Results from Boolean.Parse(string), false if exception thrown.
 		/// </returns>
-		public bool GetBoolean(string value)
+		public static bool GetBoolean(string value)
 		{
 			try
 			{
@@ -209,19 +209,17 @@ namespace Sun.Identity.Saml2
 		/// Returns &quot; if it doesn't currently exist in the given URL, otherwise
 		/// &amp; is returned.
 		/// </returns>
-		public string GetQueryStringDelimiter(string location)
+        public static string GetQueryStringDelimiter(string location)
 		{
-			if (location.Contains("?"))
-			{
-				return "&";
-			}
-			else
-			{
-				return "?";
-			}
+		    if (location == null)
+		    {
+		        throw new ArgumentNullException("location");
+		    }
+
+            return location.Contains("?") ? "&" : "?";
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Compresses, converts to Base64, then URL encodes the given 
 		/// parameter and returns the ensuing string.
 		/// </summary>
@@ -256,10 +254,15 @@ namespace Sun.Identity.Saml2
 		/// <returns>String output from the process.</returns>
 		public string UrlDecodeConvertFromBase64Decompress(string message)
 		{
-			// url decode it
+            // url decode it
 			string decodedMessage = HttpUtility.UrlDecode(message);
 
-			// convert from base 64
+            if (string.IsNullOrEmpty(decodedMessage))
+            {
+                throw new ArgumentException("Empty message");
+            }
+
+            // convert from base 64
 			byte[] byteArray = Convert.FromBase64String(decodedMessage);
 
 			// inflate the gzip deflated message
@@ -324,7 +327,7 @@ namespace Sun.Identity.Saml2
 				throw new Saml2Exception(Resources.SignedQueryStringCertHasNoPrivateKey);
 			}
 
-			string encodedSignature = string.Empty;
+			string encodedSignature;
 			string signatureAlgorithm = HttpUtility.UrlDecode(queryParams[Saml2Constants.SignatureAlgorithm]);
 
 			if (signatureAlgorithm == Saml2Constants.SignatureAlgorithmRsa)

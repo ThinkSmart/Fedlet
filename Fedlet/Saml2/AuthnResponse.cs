@@ -46,12 +46,12 @@ namespace Sun.Identity.Saml2
 		/// <summary>
 		/// Namespace Manager for this authn response.
 		/// </summary>
-		private readonly XmlNamespaceManager nsMgr;
+		private readonly XmlNamespaceManager _nsMgr;
 
 		/// <summary>
 		/// XML representation of the authn response.
 		/// </summary>
-		private readonly XmlDocument xml;
+		private readonly XmlDocument _xml;
 
 		#endregion
 
@@ -65,13 +65,13 @@ namespace Sun.Identity.Saml2
 		{
 			try
 			{
-				xml = new XmlDocument();
-				xml.PreserveWhitespace = true;
-				xml.LoadXml(samlResponse);
-				nsMgr = new XmlNamespaceManager(xml.NameTable);
-				nsMgr.AddNamespace("ds", "http://www.w3.org/2000/09/xmldsig#");
-				nsMgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
-				nsMgr.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
+				_xml = new XmlDocument();
+				_xml.PreserveWhitespace = true;
+				_xml.LoadXml(samlResponse);
+				_nsMgr = new XmlNamespaceManager(_xml.NameTable);
+				_nsMgr.AddNamespace("ds", "http://www.w3.org/2000/09/xmldsig#");
+				_nsMgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
+				_nsMgr.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
 			}
 			catch (ArgumentNullException ane)
 			{
@@ -92,7 +92,7 @@ namespace Sun.Identity.Saml2
 		/// </summary>
 		public IXPathNavigable XmlDom
 		{
-			get { return xml; }
+			get { return _xml; }
 		}
 
 		/// <summary>
@@ -103,10 +103,8 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/samlp:Response/saml:Assertion/ds:Signature";
-				XmlNode root = xml.DocumentElement;
-				XmlNode signatureElement = root.SelectSingleNode(xpath, nsMgr);
-				return signatureElement;
+                string xpath = "/samlp:Response/saml:Assertion/ds:Signature";
+                return Saml2Utils.RequireRootElement(_xml).SelectSingleNode(xpath, _nsMgr);
 			}
 		}
 
@@ -119,9 +117,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/ds:Signature";
-				XmlNode root = xml.DocumentElement;
-				XmlNode signatureElement = root.SelectSingleNode(xpath, nsMgr);
-				return signatureElement;
+				return Saml2Utils.RequireRootElement(_xml).SelectSingleNode(xpath, _nsMgr);
 			}
 		}
 
@@ -132,10 +128,8 @@ namespace Sun.Identity.Saml2
 		{
 			get
 			{
-				string xpath = "/samlp:Response/saml:Assertion";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.Attributes["ID"].Value.Trim();
+                string xpath = "/samlp:Response/saml:Assertion";
+                return Saml2Utils.RequireAttributeValue(_xml, _nsMgr, xpath, "ID");
 			}
 		}
 
@@ -147,9 +141,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.Attributes["ID"].Value.Trim();
+                return Saml2Utils.RequireAttributeValue(_xml, _nsMgr, xpath, "ID");
 			}
 		}
 
@@ -162,15 +154,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-
-				if (node.Attributes["InResponseTo"] == null)
-				{
-					return null;
-				}
-
-				return node.Attributes["InResponseTo"].Value.Trim();
+                return Saml2Utils.TryGetAttributeValue(_xml, _nsMgr, xpath, "InResponseTo");
 			}
 		}
 
@@ -182,9 +166,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Issuer";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.InnerText.Trim();
+                return Saml2Utils.RequireNodeText(_xml, _nsMgr, xpath);
 			}
 		}
 
@@ -196,9 +178,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/samlp:Status/samlp:StatusCode";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.Attributes["Value"].Value.Trim();
+                return Saml2Utils.RequireAttributeValue(_xml, _nsMgr, xpath, "Value");
 			}
 		}
 
@@ -211,15 +191,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				if (node == null)
-				{
-					return null;
-				}
-
-				string value = node.InnerText.Trim();
-				return value;
+                return Saml2Utils.TryGetNodeText(_xml, _nsMgr, xpath);
 			}
 		}
 
@@ -232,15 +204,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				if (node == null)
-				{
-					return null;
-				}
-
-				string value = node.InnerText.Trim();
-				return value;
+                return Saml2Utils.TryGetNodeText(_xml, _nsMgr, xpath);
 			}
 		}
 
@@ -253,9 +217,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/saml:AuthnStatement";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.Attributes["SessionIndex"].Value.Trim();
+                return Saml2Utils.TryGetAttributeValue(_xml, _nsMgr, xpath, "SessionIndex");
 			}
 		}
 
@@ -267,9 +229,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/saml:Subject/saml:NameID";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node == null ? null : node.InnerText.Trim();
+                return Saml2Utils.TryGetNodeText(_xml, _nsMgr, xpath);
 			}
 		}
 
@@ -281,9 +241,8 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/saml:Conditions";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return DateTime.Parse(node.Attributes["NotBefore"].Value.Trim(), CultureInfo.InvariantCulture);
+			    var value = Saml2Utils.RequireAttributeValue(_xml, _nsMgr, xpath, "NotBefore");
+				return DateTime.Parse(value, CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -295,9 +254,8 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/saml:Conditions";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return DateTime.Parse(node.Attributes["NotOnOrAfter"].Value.Trim(), CultureInfo.InvariantCulture);
+                var value = Saml2Utils.RequireAttributeValue(_xml, _nsMgr, xpath, "NotOnOrAfter");
+                return DateTime.Parse(value, CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -310,18 +268,24 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:Response/saml:Assertion/saml:Conditions/saml:AudienceRestriction/saml:Audience";
-				XmlNode root = xml.DocumentElement;
-				XmlNodeList nodeList = root.SelectNodes(xpath, nsMgr);
-				IEnumerator nodes = nodeList.GetEnumerator();
+				XmlNode root = Saml2Utils.RequireRootElement(_xml);
+				XmlNodeList nodeList = root.SelectNodes(xpath, _nsMgr);
+                var audiences = new ArrayList();
 
-				var audiences = new ArrayList();
-				while (nodes.MoveNext())
-				{
-					var node = (XmlNode) nodes.Current;
-					audiences.Add(node.InnerText.Trim());
-				}
+			    if (nodeList != null)
+			    {
+			        var nodes = nodeList.GetEnumerator();
+			        if (nodes != null)
+			        {
+			            while (nodes.MoveNext())
+			            {
+			                var node = (XmlNode) nodes.Current;
+			                audiences.Add(node.InnerText.Trim());
+			            }
+			        }
+			    }
 
-				return audiences;
+			    return audiences;
 			}
 		}
 
@@ -331,32 +295,45 @@ namespace Sun.Identity.Saml2
 		/// </summary>
 		public Hashtable Attributes
 		{
-			get
-			{
-				string xpath = "/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute";
-				XmlNode root = xml.DocumentElement;
-				XmlNodeList nodeList = root.SelectNodes(xpath, nsMgr);
-				IEnumerator nodes = nodeList.GetEnumerator();
+		    get
+		    {
+		        string xpath = "/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute";
+		        XmlNode root = Saml2Utils.RequireRootElement(_xml);
+		        XmlNodeList nodeList = root.SelectNodes(xpath, _nsMgr);
+		        var attributes = new Hashtable();
 
-				var attributes = new Hashtable();
-				while (nodes.MoveNext())
-				{
-					var samlAttribute = (XmlNode) nodes.Current;
-					string name = samlAttribute.Attributes["Name"].Value.Trim();
+		        if (nodeList != null)
+		        {
+		            var nodes = nodeList.GetEnumerator();
+		            if (nodes != null)
+		            {
+		                while (nodes.MoveNext())
+		                {
+		                    var samlAttribute = (XmlNode) nodes.Current;
+		                    if (samlAttribute.Attributes != null)
+		                    {
+		                        string name = samlAttribute.Attributes["Name"].Value.Trim();
 
-					XmlNodeList samlAttributeValues = samlAttribute.SelectNodes("descendant::saml:AttributeValue", nsMgr);
-					var values = new ArrayList();
-					foreach (XmlNode node in samlAttributeValues)
-					{
-						string value = node.InnerText.Trim();
-						values.Add(value);
-					}
+		                        XmlNodeList samlAttributeValues = samlAttribute.SelectNodes(
+		                            "descendant::saml:AttributeValue", _nsMgr);
+		                        var values = new ArrayList();
+		                        if (samlAttributeValues != null)
+		                        {
+		                            foreach (XmlNode node in samlAttributeValues)
+		                            {
+		                                string value = node.InnerText.Trim();
+		                                values.Add(value);
+		                            }
 
-					attributes.Add(name, values);
-				}
-
-				return attributes;
-			}
+		                            attributes.Add(name, values);
+		                        }
+		                    }
+		                }
+		            }
+		        }
+                
+                return attributes;
+            }
 		}
 
 		#endregion

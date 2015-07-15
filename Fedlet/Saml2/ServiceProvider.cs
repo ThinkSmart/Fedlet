@@ -124,7 +124,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/md:EntityDescriptor/md:SPSSODescriptor";
 			    var value = Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "AuthnRequestsSigned");
-				return !string.IsNullOrEmpty(value) && _saml2Utils.GetBoolean(value);
+                return !string.IsNullOrEmpty(value) && Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -213,7 +213,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:SPSSOConfig/mdx:Attribute[@name='wantArtifactResponseSigned']/mdx:Value";
                 var value = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-				return value != null && _saml2Utils.GetBoolean(value);
+                return value != null && Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -227,7 +227,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/md:EntityDescriptor/md:SPSSODescriptor";
 			    var value = Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "WantAssertionsSigned");
-                return string.IsNullOrEmpty(value) || _saml2Utils.GetBoolean(value);
+                return string.IsNullOrEmpty(value) || Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -241,7 +241,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:SPSSOConfig/mdx:Attribute[@name='wantPOSTResponseSigned']/mdx:Value";
                 var value = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(value) && _saml2Utils.GetBoolean(value);
+                return !string.IsNullOrEmpty(value) && Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -255,7 +255,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:SPSSOConfig/mdx:Attribute[@name='wantLogoutRequestSigned']/mdx:Value";
                 var value = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(value) && _saml2Utils.GetBoolean(value);
+                return !string.IsNullOrEmpty(value) && Saml2Utils.GetBoolean(value);
             }
 		}
 
@@ -269,7 +269,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:SPSSOConfig/mdx:Attribute[@name='wantLogoutResponseSigned']/mdx:Value";
                 var value = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return string.IsNullOrEmpty(value) || _saml2Utils.GetBoolean(value);
+                return string.IsNullOrEmpty(value) || Saml2Utils.GetBoolean(value);
             }
 		}
 
@@ -333,11 +333,12 @@ namespace Sun.Identity.Saml2
 			int authLevel = -1;
 
 			XmlNodeList nodes = GetAuthnContextClassRefMap();
-			IEnumerator i = nodes.GetEnumerator();
+			//IEnumerator i = nodes.GetEnumerator();
 
-			while (i.MoveNext())
+			//while (i.MoveNext())
+            foreach (XmlNode value in nodes)
 			{
-				var value = (XmlNode) i.Current;
+				//var value = (XmlNode) i.Current;
 				char[] separators = {'|'};
 				string[] results = value.InnerText.Split(separators);
 				if (results.Length > 1 && results[0] == classReference)
@@ -372,11 +373,12 @@ namespace Sun.Identity.Saml2
 			string classReference = Saml2Constants.AuthClassRefPasswordProtectedTransport;
 
 			XmlNodeList nodes = GetAuthnContextClassRefMap();
-			IEnumerator i = nodes.GetEnumerator();
+			//IEnumerator i = nodes.GetEnumerator();
 
-			while (i.MoveNext())
+			//while (i.MoveNext())
+            foreach (XmlNode value in nodes)
 			{
-				var value = (XmlNode) i.Current;
+				//var value = (XmlNode) i.Current;
 				char[] separators = {'|'};
 				string[] results = value.InnerText.Split(separators);
 				if (results.Length > 1 && Convert.ToInt32(results[1], CultureInfo.InvariantCulture) == authLevel)

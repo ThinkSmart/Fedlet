@@ -593,7 +593,7 @@ namespace Sun.Identity.Saml2
 
 			var redirectUrl = new StringBuilder();
 			redirectUrl.Append(ssoRedirectLocation);
-            redirectUrl.Append(_saml2Utils.GetQueryStringDelimiter(ssoRedirectLocation));
+            redirectUrl.Append(Saml2Utils.GetQueryStringDelimiter(ssoRedirectLocation));
 			redirectUrl.Append(queryString);
 
 			_logger.Info("AuthnRequest via Redirect:\r\n{0}", redirectUrl);
@@ -746,7 +746,7 @@ namespace Sun.Identity.Saml2
 
 			var redirectUrl = new StringBuilder();
 			redirectUrl.Append(sloRedirectLocation);
-            redirectUrl.Append(_saml2Utils.GetQueryStringDelimiter(sloRedirectLocation));
+            redirectUrl.Append(Saml2Utils.GetQueryStringDelimiter(sloRedirectLocation));
 			redirectUrl.Append(queryString);
 
 			_logger.Info("LogoutRequest via Redirect:\r\n{0}", redirectUrl);
@@ -901,7 +901,7 @@ namespace Sun.Identity.Saml2
 
 			var redirectUrl = new StringBuilder();
 			redirectUrl.Append(sloRedirectResponseLocation);
-            redirectUrl.Append(_saml2Utils.GetQueryStringDelimiter(sloRedirectResponseLocation));
+            redirectUrl.Append(Saml2Utils.GetQueryStringDelimiter(sloRedirectResponseLocation));
 			redirectUrl.Append(queryString);
 
 			_logger.Info("LogoutResponse via Redirect:\r\n{0}", redirectUrl);
@@ -1073,12 +1073,24 @@ namespace Sun.Identity.Saml2
 				requestStream.Write(byteArray, 0, byteArray.Length);
 				requestStream.Close();
 
-				response = (HttpWebResponse) request.GetResponse();
-				var streamReader = new StreamReader(response.GetResponseStream());
-				string responseContent = streamReader.ReadToEnd();
-				streamReader.Close();
+                response = (HttpWebResponse)request.GetResponse();
+                string responseContent = null;
+                using (var responseStream = response.GetResponseStream())
+                {
+                    if (responseStream != null)
+                    {
+                        var streamReader = new StreamReader(responseStream);
+                        responseContent = streamReader.ReadToEnd();
+                        streamReader.Close();
+                    }
+                }
 
-				var soapResponse = new XmlDocument();
+			    if (string.IsNullOrEmpty(responseContent))
+			    {
+			        throw new Saml2Exception("Empty response");
+			    }
+
+			    var soapResponse = new XmlDocument();
 				soapResponse.PreserveWhitespace = true;
 				soapResponse.LoadXml(responseContent);
 

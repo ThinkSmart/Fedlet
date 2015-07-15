@@ -180,7 +180,7 @@ namespace Sun.Identity.Saml2
 	            const string xpath =
 	                "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantArtifactResolveSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-	            return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
+                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
 	        }
 	    }
 
@@ -194,7 +194,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor";
                 var value = Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "WantAuthnRequestsSigned");
-			    return !string.IsNullOrEmpty(value) && _saml2Utils.GetBoolean(value);
+                return !string.IsNullOrEmpty(value) && Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -209,7 +209,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutRequestSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
+                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
 			}
 		}
 
@@ -223,7 +223,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutResponseSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(text) && _saml2Utils.GetBoolean(text);
+                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
             }
 		}
 
@@ -281,13 +281,11 @@ namespace Sun.Identity.Saml2
 		/// </returns>
 		public string GetSingleLogoutServiceResponseLocation(string binding)
 		{
-			var xpath = new StringBuilder();
-			xpath.Append("/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleLogoutService");
-			xpath.Append("[@Binding='");
-			xpath.Append(binding);
-			xpath.Append("']");
-
-            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "ResponseLocation");
+			var xpath = string.Format("/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleLogoutService[@Binding='{0}']", binding);
+            return 
+                Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "ResponseLocation")
+                ??
+                Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "Location");
 		}
 
 		/// <summary>
@@ -297,13 +295,8 @@ namespace Sun.Identity.Saml2
 		/// <returns>Service location as defined in the metadata for the specified IDP and binding.</returns>
 		public string GetSingleSignOnServiceLocation(string binding)
 		{
-			var xpath = new StringBuilder();
-			xpath.Append("/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleSignOnService");
-			xpath.Append("[@Binding='");
-			xpath.Append(binding);
-			xpath.Append("']");
-
-            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath.ToString(), "Location");
+            var xpath = string.Format("/md:EntityDescriptor/md:IDPSSODescriptor/md:SingleSignOnService[@Binding='{0}']", binding);
+            return Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "Location");
         }
 
 		#endregion
