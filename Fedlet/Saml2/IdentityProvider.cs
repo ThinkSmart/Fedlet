@@ -180,7 +180,7 @@ namespace Sun.Identity.Saml2
 	            const string xpath =
 	                "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantArtifactResolveSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
+                return Saml2Utils.GetBoolean(text);
 	        }
 	    }
 
@@ -194,7 +194,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/md:EntityDescriptor/md:IDPSSODescriptor";
                 var value = Saml2Utils.TryGetAttributeValue(_metadata, _metadataNsMgr, xpath, "WantAuthnRequestsSigned");
-                return !string.IsNullOrEmpty(value) && Saml2Utils.GetBoolean(value);
+                return Saml2Utils.GetBoolean(value);
 			}
 		}
 
@@ -209,7 +209,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutRequestSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
+                return Saml2Utils.GetBoolean(text);
 			}
 		}
 
@@ -223,7 +223,7 @@ namespace Sun.Identity.Saml2
 			{
 				const string xpath = "/mdx:EntityConfig/mdx:IDPSSOConfig/mdx:Attribute[@name='wantLogoutResponseSigned']/mdx:Value";
                 var text = Saml2Utils.TryGetNodeText(_extendedMetadata, _extendedMetadataNsMgr, xpath);
-                return !string.IsNullOrEmpty(text) && Saml2Utils.GetBoolean(text);
+                return Saml2Utils.GetBoolean(text);
             }
 		}
 

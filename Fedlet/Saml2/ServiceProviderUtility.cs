@@ -985,10 +985,10 @@ namespace Sun.Identity.Saml2
 			}
 
             var logoutRequest = new LogoutRequest(idp, ServiceProvider, parameters, _saml2Utils);
-			var xmlDoc = (XmlDocument) logoutRequest.XmlDom;
-            _logger.Info("LogoutRequest:\r\n{0}", xmlDoc.OuterXml);
+            var logoutRequestXml = (XmlDocument)logoutRequest.XmlDom;
+            _logger.Info("LogoutRequest:\r\n{0}", logoutRequestXml.OuterXml);
 
-			// Send with Redirect, POST, or SOAP based on the 'Binding' parameter.
+            // Send with Redirect, POST, or SOAP based on the 'Binding' parameter.
 			if (parameters[Saml2Constants.Binding] == Saml2Constants.HttpPostProtocolBinding)
 			{
 				LogoutRequestCache.AddSentLogoutRequest(context, logoutRequest);

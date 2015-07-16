@@ -134,15 +134,15 @@ namespace Sun.Identity.Saml2
 				{
 					throw new Saml2Exception(Resources.LogoutRequestSessionIndexNotDefined);
 				}
-				else if (String.IsNullOrEmpty(subjectNameId))
+				if (String.IsNullOrEmpty(subjectNameId))
 				{
 					throw new Saml2Exception(Resources.LogoutRequestSubjectNameIdNotDefined);
 				}
-				else if (serviceProvider == null)
+				if (serviceProvider == null)
 				{
 					throw new Saml2Exception(Resources.LogoutRequestServiceProviderIsNull);
 				}
-				else if (identityProvider == null)
+				if (identityProvider == null)
 				{
 					throw new Saml2Exception(Resources.LogoutRequestIdentityProviderIsNull);
 				}
@@ -170,13 +170,13 @@ namespace Sun.Identity.Saml2
 				}
 
 				rawXml.Append(" >");
-				rawXml.Append(" <saml:NameID xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\"");
+                rawXml.Append(" <saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">" + serviceProvider.EntityId +
+                              "</saml:Issuer>");
+                rawXml.Append(" <saml:NameID xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\"");
 				rawXml.Append("  Format=\"urn:oasis:names:tc:SAML:2.0:nameid-format:transient\"");
 				rawXml.Append("  NameQualifier=\"" + identityProvider.EntityId + "\">" + subjectNameId + "</saml:NameID> ");
-				rawXml.Append(" <saml:SessionIndex xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">" + sessionIndex +
-				              "</saml:SessionIndex>");
-				rawXml.Append(" <saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">" + serviceProvider.EntityId +
-				              "</saml:Issuer>");
+                rawXml.Append(" <samlp:SessionIndex xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\">" + sessionIndex +
+				              "</samlp:SessionIndex>");
 				rawXml.Append("</samlp:LogoutRequest>");
 
 				xml.LoadXml(rawXml.ToString());
@@ -205,15 +205,10 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:LogoutRequest";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-
-				if (node.Attributes["NotOnOrAfter"] != null)
-				{
-					return DateTime.Parse(node.Attributes["NotOnOrAfter"].Value.Trim(), CultureInfo.InvariantCulture);
-				}
-
-				return DateTime.MinValue;
+			    var value = Saml2Utils.TryGetAttributeValue(xml, nsMgr, xpath, "NotOnOrAfter");
+			    return string.IsNullOrEmpty(value)
+			        ? DateTime.MinValue
+			        : DateTime.Parse(value, CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -225,9 +220,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:LogoutRequest";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.Attributes["ID"].Value.Trim();
+			    return Saml2Utils.RequireAttributeValue(xml, nsMgr, xpath, "ID");
 			}
 		}
 
@@ -239,9 +232,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:LogoutRequest/saml:Issuer";
-				XmlNode root = xml.DocumentElement;
-				XmlNode node = root.SelectSingleNode(xpath, nsMgr);
-				return node.InnerText.Trim();
+                return Saml2Utils.RequireNodeText(xml, nsMgr, xpath);
 			}
 		}
 
@@ -261,9 +252,7 @@ namespace Sun.Identity.Saml2
 			get
 			{
 				string xpath = "/samlp:LogoutRequest/ds:Signature";
-				XmlNode root = xml.DocumentElement;
-				XmlNode signatureElement = root.SelectSingleNode(xpath, nsMgr);
-				return signatureElement;
+				return Saml2Utils.RequireRootElement(xml).SelectSingleNode(xpath, nsMgr);
 			}
 		}
 

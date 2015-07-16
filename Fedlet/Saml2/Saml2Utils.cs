@@ -184,18 +184,8 @@ namespace Sun.Identity.Saml2
 		/// </returns>
 		public static bool GetBoolean(string value)
 		{
-			try
-			{
-				return Boolean.Parse(value);
-			}
-			catch (ArgumentNullException)
-			{
-				return false;
-			}
-			catch (FormatException)
-			{
-				return false;
-			}
+		    bool result;
+		    return Boolean.TryParse(value, out result) && result;
 		}
 
 		/// <summary>
@@ -399,6 +389,7 @@ namespace Sun.Identity.Saml2
 			var xml = (XmlDocument) xmlDoc;
 			var signedXml = new SignedXml(xml);
 			signedXml.SigningKey = cert.PrivateKey;
+		    signedXml.SignedInfo.CanonicalizationMethod = SignedXml.XmlDsigExcC14NTransformUrl;
 
 			if (includePublicKey)
 			{
@@ -410,8 +401,8 @@ namespace Sun.Identity.Saml2
 			var reference = new Reference();
 			reference.Uri = "#" + targetReferenceId;
 
-			var envelopSigTransform = new XmlDsigEnvelopedSignatureTransform();
-			reference.AddTransform(envelopSigTransform);
+            reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
+		    reference.AddTransform(new XmlDsigExcC14NTransform());
 
 			signedXml.AddReference(reference);
 			signedXml.ComputeSignature();
