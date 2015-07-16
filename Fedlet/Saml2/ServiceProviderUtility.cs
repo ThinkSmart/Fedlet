@@ -1769,7 +1769,7 @@ namespace Sun.Identity.Saml2
 				throw new Saml2Exception(Resources.ServiceProviderUtilityLogoutResponseIsNull);
 			}
 
-			CheckInResponseTo(logoutResponse, logoutRequests);
+			//CheckInResponseTo(logoutResponse, logoutRequests);
 			CheckIssuer(logoutResponse.Issuer);
 			CheckCircleOfTrust(logoutResponse.Issuer);
 			CheckStatusCode(logoutResponse.StatusCode);

@@ -173,8 +173,9 @@ namespace Sun.Identity.Saml2
                 rawXml.Append(" <saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">" + serviceProvider.EntityId +
                               "</saml:Issuer>");
                 rawXml.Append(" <saml:NameID xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\"");
-				rawXml.Append("  Format=\"urn:oasis:names:tc:SAML:2.0:nameid-format:transient\"");
-				rawXml.Append("  NameQualifier=\"" + identityProvider.EntityId + "\">" + subjectNameId + "</saml:NameID> ");
+				//rawXml.Append("  Format=\"urn:oasis:names:tc:SAML:2.0:nameid-format:transient\"");
+				//rawXml.Append("  NameQualifier=\"" + identityProvider.EntityId + "\">" + subjectNameId + "</saml:NameID> ");
+				rawXml.Append("  >" + subjectNameId + "</saml:NameID> ");
                 rawXml.Append(" <samlp:SessionIndex xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\">" + sessionIndex +
 				              "</samlp:SessionIndex>");
 				rawXml.Append("</samlp:LogoutRequest>");
