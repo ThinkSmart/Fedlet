@@ -37,6 +37,11 @@ namespace Sun.Identity.Saml2
         /// </summary>
         public const string NameIDPolicyFormat = "NameIDPolicyFormat";
 
+        /// <summary>
+        /// Constant for the NameIDPolicy Format for SAML AuthnRequest
+        /// </summary>
+        public const string NameIDPolicyFormatUnspecified = "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified";
+
 	    /// <summary>
 		/// Constant for the request parameter to specify AllowCreate
 		/// in the AuthnRequest.

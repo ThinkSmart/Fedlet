@@ -92,6 +92,11 @@ namespace Sun.Identity.Saml2
 			    NameIDPolicyFormat = parameters[Saml2Constants.NameIDPolicyFormat];
 			}
 
+	        if (string.IsNullOrEmpty(NameIDPolicyFormat))
+	        {
+	            NameIDPolicyFormat = Saml2Constants.NameIDPolicyFormatUnspecified;
+	        }
+
 			string assertionConsumerSvcUrl = null;
 			if (!String.IsNullOrEmpty(Binding))
 			{
@@ -157,7 +162,7 @@ namespace Sun.Identity.Saml2
 			}
 			else
 			{
-				rawXml.Append(" AssertionConsumerIndex=\"" + AssertionConsumerServiceIndex + "\"");
+				rawXml.Append(" AssertionConsumerServiceIndex=\"" + AssertionConsumerServiceIndex + "\"");
 			}
 
 			rawXml.Append(">");
